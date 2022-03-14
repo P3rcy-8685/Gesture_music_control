@@ -13,6 +13,7 @@ devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume = cast(interface, POINTER(IAudioEndpointVolume))
 minv,maxv,curr=volume.GetVolumeRange()
+x=50
 while True:
     success,img=cap.read()
     imgRGB=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
@@ -38,21 +39,24 @@ while True:
                 allHands.append(myHand)
             if len(allHands)==2:
                 time.sleep(0.5)
-            else:  
-                cv2.circle(img,((xList[8]+xList[4])//2,(yList[8]+yList[4])//2),12,(255,255,255),cv2.FILLED)
-                l=math.hypot(xList[8]-xList[4],yList[8]-yList[4])
-                cv2.line(img,(xList[8],yList[8]),(xList[4],yList[4]),(255,255,255),3)
+            else:
+                if handtype.classification[0].label=="Left":
+                    cv2.circle(img,((xList[8]+xList[4])//2,(yList[8]+yList[4])//2),12,(255,255,255),cv2.FILLED)
+                    l=math.hypot(xList[8]-xList[4],yList[8]-yList[4])
+                    cv2.line(img,(xList[8],yList[8]),(xList[4],yList[4]),(255,255,255),3)
 
-                if l<40:#40 is the minimum value
-                    cv2.circle(img,((xList[8]+xList[4])//2,(yList[8]+yList[4])//2),12,(0,0,255),cv2.FILLED)
-                #max is 200 so range is 160 for minv to maxv.... so slope will be
-                slope=(maxv-minv)/160
-                x=(l-200)*slope
-                if x>maxv:
-                    x=maxv
-                elif x<minv:
-                    x=minv
-                volume.SetMasterVolumeLevel(x,None)
+                    if l<40:#40 is the minimum value
+                        cv2.circle(img,((xList[8]+xList[4])//2,(yList[8]+yList[4])//2),12,(0,0,255),cv2.FILLED)
+                    #max is 200 so range is 160 for minv to maxv.... so slope will be
+                    slope=(maxv-minv)/160
+                    x=(l-200)*slope
+                    if x>maxv:
+                        x=maxv
+                    elif x<minv:
+                        x=minv
+                    volume.SetMasterVolumeLevel(x,None)
+                    x=100+(100)/(-minv)*(x)
+    cv2.putText(img=img, text=str(x),org=(60,60), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=1, color=(0, 255, 0),thickness=3)
     cv2.imshow("Image",img)
     cv2.waitKey(1)
 
